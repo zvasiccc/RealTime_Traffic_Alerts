@@ -1,0 +1,6 @@
+data/DOT_Traffic_Speeds_NBE.csv
+*.csv~
+__pycache__/
+*.pyc
+venv/
+.env
