@@ -11,5 +11,3 @@ def start_detecting_congestion():
     
     for message in consumer:
         data=message.value
-        # print("detector cita poruku", data)
-        # print("-------------------------------------------------------------")

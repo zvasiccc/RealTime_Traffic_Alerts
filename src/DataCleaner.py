@@ -21,9 +21,6 @@ def data_cleaner(worker_id):
     for message in consumer:
         raw_data=message.value
         structured_data = clean_garbage_data(raw_data)
-        print(structured_data)
-        print(f"LINK_ID je : {structured_data['LINK_ID']} Brzina je: {structured_data['SPEED']}")
-        print("----------------------")
         
         #TODO ciscenje podataka
         producer.send('clean_traffic',value=structured_data)
@@ -70,6 +67,5 @@ def clean_garbage_data(raw_message):
 
     clean_dict = dict(zip(column_names, actual_values))
     
-    clean_dict['ingestion_timestamp'] = raw_message.get('ingestion_timestamp')
     
     return clean_dict

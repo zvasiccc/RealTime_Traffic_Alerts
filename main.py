@@ -4,6 +4,7 @@ from src.RealTimeSimulator import simulate_traffic
 from src.DataCleaner import start_cleaning_data
 from src.StatisticsAggregator import start_aggregating_statistics
 from src.CongestionDetector import start_detecting_congestion
+from DB.setup import setup_database
 
 if __name__ == '__main__':
 
@@ -12,6 +13,7 @@ if __name__ == '__main__':
         multiprocessing.Process(target=start_cleaning_data, name="DataCleaner"),
         multiprocessing.Process(target=start_detecting_congestion, name="CongestionDetector"),
         multiprocessing.Process(target=start_aggregating_statistics, name="Monitor"),   
+        multiprocessing.Process(target=setup_database, name="DB"),   
     ]
 
     for p in processes:

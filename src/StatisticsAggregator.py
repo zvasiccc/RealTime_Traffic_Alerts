@@ -1,17 +1,92 @@
 from kafka import KafkaConsumer
 import json
+import psycopg2
+from datetime import datetime, timezone
 
-def start_aggregating_statistics():    
-    consumer = KafkaConsumer(
-            'clean_traffic',
-            bootstrap_servers='localhost:29092',
-            group_id='aggregatorsGroup',
-            value_deserializer=lambda v: json.loads(v.decode('utf-8')), 
+def get_connection():
+    return psycopg2.connect(
+        host="localhost",
+        database="traffic_monitoring",
+        user="zeljko",
+        password="lozinka123"
     )
-    
-    for message in consumer:
-        data=message.value
-        # print("aggregator cita poruku:",data)
-        # print("-------------------------------------------------------------")
-    
 
+def day_period(hour: int) -> str:
+    if 7 <= hour <= 9:
+        return 'morning_peak'
+    elif 10 <= hour <= 15:
+        return 'day_time'
+    elif 16 <= hour <= 18:
+        return 'evening_peak'
+    else:
+        return 'night'
+
+def start_aggregating_statistics():
+    consumer = KafkaConsumer(
+        'clean_traffic',
+        bootstrap_servers='localhost:29092',
+        group_id='aggregatorsGroup',
+        auto_offset_reset='earliest',
+        value_deserializer=lambda v: json.loads(v.decode('utf-8')),
+    )
+
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    for message in consumer:
+        data = message.value
+
+        try:
+            link_id     = int(data.get('LINK_ID', 0))
+            speed       = float(data.get('SPEED', 0))
+            travel_time = int(data.get('TRAVEL_TIME', 0))
+            status      = int(data.get('STATUS', 0))
+            link_name   = data.get('LINK_NAME', '')
+            borough     = data.get('BOROUGH', '')
+
+            timestamp = data.get('DATA_AS_OF') 
+            if timestamp:
+                time = datetime.strptime(timestamp, '%m/%d/%Y %I:%M:%S %p')
+                time = time.replace(tzinfo=timezone.utc)
+            else:
+                time = datetime.now(timezone.utc)
+            hour = time.hour
+            period = day_period(hour)
+            is_weekend = time.weekday()>=5 #saturday=5, sunday=6
+            
+            cursor.execute("""
+                INSERT INTO traffic_data
+                    (time, link_id, speed, travel_time, status, link_name, borough, hour_of_day, day_period,is_weekend)
+                VALUES
+                    (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (time, link_id, speed, travel_time, status, link_name, borough, hour, period,is_weekend))
+            
+            cursor.execute("""
+            INSERT INTO traffic_stats 
+                (link_id, hour_of_day, day_period, is_weekend, avg_speed, p10_speed, p25_speed, p75_speed, sample_count, updated_at)
+            SELECT
+                %s, %s, %s, %s,
+                avg(speed),
+                percentile_cont(0.10) WITHIN GROUP (ORDER BY speed),
+                percentile_cont(0.25) WITHIN GROUP (ORDER BY speed),
+                percentile_cont(0.75) WITHIN GROUP (ORDER BY speed),
+                count(*),
+                now()
+            FROM traffic_data
+            WHERE link_id = %s AND hour_of_day = %s AND is_weekend = %s
+            ON CONFLICT (link_id, hour_of_day, is_weekend)
+            DO UPDATE SET
+                avg_speed    = EXCLUDED.avg_speed,
+                p10_speed    = EXCLUDED.p10_speed,
+                p25_speed    = EXCLUDED.p25_speed,
+                p75_speed    = EXCLUDED.p75_speed,
+                sample_count = EXCLUDED.sample_count,
+                updated_at   = EXCLUDED.updated_at;
+        """, (link_id, hour, period, is_weekend, link_id, hour, is_weekend))
+
+
+            connection.commit()
+
+        except Exception as e:
+            connection.rollback()
+            print(f"[Stats Service] Greška: {e}")

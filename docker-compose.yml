@@ -20,7 +20,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
   db:
-    image: timescale/timescaledb-ha:pg15-oss 
+    image: timescale/timescaledb:latest-pg15 
     container_name: traffic_db
     environment:
       - POSTGRES_USER=zeljko
@@ -30,6 +30,18 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: traffic_pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@gmail.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
     restart: always
 
 volumes:

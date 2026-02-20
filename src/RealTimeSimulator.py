@@ -13,9 +13,9 @@ producer = KafkaProducer(
 
 
 def simulate_traffic():
-    print("simulate trafic")
-    BROJ_REDOVA_PO_GRUPI = 3
-    PAUZA_IZMEDJU_GRUPA = 3 
+
+    BROJ_REDOVA_PO_GRUPI = 50
+    PAUZA_IZMEDJU_GRUPA = 1
 
     traffic_chunks = load_data(500)
 
@@ -26,7 +26,6 @@ def simulate_traffic():
             
             for index, row in batch.iterrows():
                 payload = row.to_dict()
-                payload['ingestion_timestamp'] = datetime.utcnow().isoformat()
                 
                 producer.send(
                     'raw_traffic', 
