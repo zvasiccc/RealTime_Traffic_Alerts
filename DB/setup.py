@@ -1,12 +1,4 @@
-import psycopg2
-
-def get_connection():
-    return psycopg2.connect(
-        host="localhost",
-        database="traffic_monitoring",
-        user="zeljko",
-        password="lozinka123"
-    )
+from src.SideFunctions import get_connection
 
 def setup_database():
     conn = get_connection()
@@ -22,7 +14,6 @@ def setup_database():
             link_id     INT NOT NULL,
             speed       FLOAT,
             travel_time INT,
-            status      INT,
             link_name   TEXT,
             borough     TEXT,
             hour_of_day INT,

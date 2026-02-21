@@ -1,8 +1,9 @@
 from kafka import KafkaConsumer, KafkaProducer
+from datetime import datetime
 import json
 import multiprocessing
-import time
-import os
+import csv
+import io
 
 def data_cleaner(worker_id):
     consumer = KafkaConsumer(
@@ -20,10 +21,12 @@ def data_cleaner(worker_id):
 
     for message in consumer:
         raw_data=message.value
-        structured_data = clean_garbage_data(raw_data)
+        clean_data = clean_garbage_data(raw_data)
         
-        #TODO ciscenje podataka
-        producer.send('clean_traffic',value=structured_data)
+        if clean_data is None:
+            continue
+        
+        producer.send('clean_traffic',value=clean_data)
         producer.flush() 
 
 
@@ -52,20 +55,45 @@ def clean_garbage_data(raw_message):
     raw_values = raw_message[big_message_key]
     
     column_names = [
-        "ID", "SPEED", "TRAVEL_TIME", "STATUS", "DATA_AS_OF", 
+        "ID", "SPEED", "TRAVEL_TIME",  "DATA_AS_OF", 
         "LINK_ID", "LINK_POINTS", "ENCODED_POLY_LINE", 
         "ENCODED_POLY_LINE_LVLS", "OWNER", "TRANSCOM_ID", 
         "BOROUGH", "LINK_NAME"
     ]
     
-    import csv
-    import io
     
     f = io.StringIO(raw_values)
     reader = csv.reader(f, delimiter=',')
     actual_values = next(reader)
 
-    clean_dict = dict(zip(column_names, actual_values))
+    data_dictionary = dict(zip(column_names, actual_values))
     
+    try:
+        speed=float(data_dictionary['SPEED'])
+        link_id=int(data_dictionary['LINK_ID'])
+        travel_time=int(data_dictionary['TRAVEL_TIME'])
+        datetime.strptime(data_dictionary['DATA_AS_OF'], '%m/%d/%Y %I:%M:%S %p')
+    except (ValueError, TypeError):
+        return None
+
+    if speed <= 0 or speed > 200:
+        return None
+    if link_id <= 0:
+        return None
+    if travel_time <= 0 or travel_time>7200:
+        return None
+    if not data_dictionary['LINK_NAME'].strip():
+        return None
+
+    data_dictionary['LINK_NAME'] = data_dictionary.get('LINK_NAME', '').strip()
+    data_dictionary['BOROUGH']   = data_dictionary.get('BOROUGH', '').strip()
     
-    return clean_dict
+    new_dictionary = {
+    'DATA_AS_OF':data_dictionary['DATA_AS_OF'],
+    'LINK_ID':data_dictionary['LINK_ID'],
+    'LINK_NAME':data_dictionary['LINK_NAME'],
+    'SPEED':data_dictionary['SPEED'],
+    'TRAVEL_TIME':data_dictionary['TRAVEL_TIME'],
+    'BOROUGH': data_dictionary['BOROUGH'],
+}
+    return new_dictionary

@@ -2,7 +2,7 @@ from kafka import KafkaConsumer, KafkaProducer
 import json
 from datetime import datetime, timezone, timedelta
 from DB.setup import get_connection
-from src.StatisticsAggregator import day_period
+from src.SideFunctions import day_period
 
 def start_detecting_congestion():
     consumer = KafkaConsumer(
@@ -77,7 +77,7 @@ def start_detecting_congestion():
         warning_type = None
         if speed_average_last_15min < p10_speed:
             warning_type = 'VERY_SLOW_TRAFFIC'
-        elif (speed_average_last_15min >= p10_speed & speed_average_last_15min < p25_speed):
+        elif (speed_average_last_15min >= p10_speed and speed_average_last_15min < p25_speed):
             warning_type = 'SLOW_TRAFFIC'
 
         if warning_type == 'VERY_SLOW_TRAFFIC':
@@ -92,6 +92,7 @@ def start_detecting_congestion():
                 'speed': speed,
                 'avg_speed': avg_speed,
                 'p10_speed': p10_speed,
+                'p25_speed': p25_speed,
                 'hour_of_day': hour,
                 'day_period': period,
                 'warning_type': warning_type,

@@ -1,25 +1,10 @@
 from kafka import KafkaConsumer
 import json
-import psycopg2
+
 from datetime import datetime, timezone
+from src.SideFunctions import day_period, get_connection
 
-def get_connection():
-    return psycopg2.connect(
-        host="localhost",
-        database="traffic_monitoring",
-        user="zeljko",
-        password="lozinka123"
-    )
 
-def day_period(hour: int) -> str:
-    if 7 <= hour <= 9:
-        return 'morning_peak'
-    elif 10 <= hour <= 15:
-        return 'day_time'
-    elif 16 <= hour <= 18:
-        return 'evening_peak'
-    else:
-        return 'night'
 
 def start_aggregating_statistics():
     consumer = KafkaConsumer(
@@ -37,12 +22,11 @@ def start_aggregating_statistics():
         data = message.value
 
         try:
-            link_id     = int(data.get('LINK_ID', 0))
-            speed       = float(data.get('SPEED', 0))
+            link_id = int(data.get('LINK_ID', 0))
+            speed = float(data.get('SPEED', 0))
             travel_time = int(data.get('TRAVEL_TIME', 0))
-            status      = int(data.get('STATUS', 0))
-            link_name   = data.get('LINK_NAME', '')
-            borough     = data.get('BOROUGH', '')
+            link_name= data.get('LINK_NAME', '')
+            borough = data.get('BOROUGH', '')
 
             timestamp = data.get('DATA_AS_OF') 
             if timestamp:
@@ -58,10 +42,10 @@ def start_aggregating_statistics():
             
             cursor.execute("""
                 INSERT INTO traffic_data
-                    (time, link_id, speed, travel_time, status, link_name, borough, hour_of_day, day_period,is_weekend)
+                    (time, link_id, link_name, speed, travel_time,  borough, hour_of_day, day_period,is_weekend)
                 VALUES
-                    (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (time, link_id, speed, travel_time, status, link_name, borough, hour, period,is_weekend))
+                    (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (time, link_id,link_name, speed, travel_time, borough, hour, period,is_weekend))
             
             cursor.execute("""
             INSERT INTO traffic_stats 
@@ -78,12 +62,12 @@ def start_aggregating_statistics():
             WHERE link_id = %s AND hour_of_day = %s AND is_weekend = %s
             ON CONFLICT (link_id, hour_of_day, is_weekend)
             DO UPDATE SET
-                avg_speed    = EXCLUDED.avg_speed,
-                p10_speed    = EXCLUDED.p10_speed,
-                p25_speed    = EXCLUDED.p25_speed,
-                p75_speed    = EXCLUDED.p75_speed,
+                avg_speed = EXCLUDED.avg_speed,
+                p10_speed = EXCLUDED.p10_speed,
+                p25_speed = EXCLUDED.p25_speed,
+                p75_speed = EXCLUDED.p75_speed,
                 sample_count = EXCLUDED.sample_count,
-                updated_at   = EXCLUDED.updated_at;
+                updated_at = EXCLUDED.updated_at;
         """, (link_id, hour, period, is_weekend, link_id, hour, is_weekend))
 
 
