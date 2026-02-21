@@ -50,7 +50,9 @@ def start_aggregating_statistics():
                 time = time.replace(tzinfo=timezone.utc)
             else:
                 time = datetime.now(timezone.utc)
-            hour = time.hour
+            hour = time.hour if time.minute<30 else time.hour+1
+            if hour == 24:
+                hour = 0
             period = day_period(hour)
             is_weekend = time.weekday()>=5 #saturday=5, sunday=6
             
@@ -89,4 +91,4 @@ def start_aggregating_statistics():
 
         except Exception as e:
             connection.rollback()
-            print(f"[Stats Service] Greška: {e}")
+            print(f"Error in aggregating statistics: {e}")

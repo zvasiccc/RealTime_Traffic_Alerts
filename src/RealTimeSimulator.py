@@ -14,10 +14,10 @@ producer = KafkaProducer(
 
 def simulate_traffic():
 
-    BROJ_REDOVA_PO_GRUPI = 50
-    PAUZA_IZMEDJU_GRUPA = 1
+    BROJ_REDOVA_PO_GRUPI = 100
+    PAUZA_IZMEDJU_GRUPA = 0.1
 
-    traffic_chunks = load_data(500)
+    traffic_chunks = load_data(5000)
 
     for chunk in traffic_chunks:
 

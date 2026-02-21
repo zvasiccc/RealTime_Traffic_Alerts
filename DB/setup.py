@@ -15,7 +15,7 @@ def setup_database():
 
     cur.execute("CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;")
 
-    #svi cisti podaci
+    #all clear data
     cur.execute("""
         CREATE TABLE IF NOT EXISTS traffic_data (
             time        TIMESTAMPTZ NOT NULL,
@@ -30,11 +30,13 @@ def setup_database():
             is_weekend BOOLEAN
         );
     """)
+    
+    #table partitioning by time
     cur.execute("""
         SELECT create_hypertable('traffic_data', 'time', if_not_exists => TRUE);
     """)
 
-    #statistika
+    #statistics data
     cur.execute("""
         CREATE TABLE IF NOT EXISTS traffic_stats (
             link_id      INT NOT NULL,
@@ -51,7 +53,7 @@ def setup_database():
         );
     """)
 
-    # WARNINGS LOG
+    #warnings
     cur.execute("""
         CREATE TABLE IF NOT EXISTS traffic_warnings (
             time         TIMESTAMPTZ NOT NULL,
@@ -68,40 +70,7 @@ def setup_database():
     cur.execute("""
         SELECT create_hypertable('traffic_warnings', 'time', if_not_exists => TRUE);
     """)
-    print("[4/4] Warnings tabela kreirana.")
 
-    # CONTINUOUS AGGREGATE
-    cur.execute("""
-        CREATE MATERIALIZED VIEW IF NOT EXISTS traffic_stats_hourly
-        WITH (timescaledb.continuous) AS
-        SELECT
-            time_bucket('1 hour', time) AS bucket,
-            link_id,
-            avg(speed)                  AS avg_speed,
-            min(speed)                  AS min_speed,
-            max(speed)                  AS max_speed,
-            count(*)                    AS sample_count
-        FROM traffic_data
-        GROUP BY bucket, link_id;
-    """)
-
-    try:
-        cur.execute("""
-            SELECT add_continuous_aggregate_policy('traffic_stats_hourly',
-                start_offset      => INTERVAL '1 month',
-                end_offset        => INTERVAL '1 minute',
-                schedule_interval => INTERVAL '5 minutes');
-        """)
-    except:
-        print("Politika vec postoji, preskacem.")
-
-    try:
-        cur.execute("""
-            SELECT add_retention_policy('traffic_data', INTERVAL '6 months');
-        """)
-    except:
-        print("Retention policy vec postoji.")
 
     cur.close()
     conn.close()
-    print("Baza je spremna.")
