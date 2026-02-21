@@ -55,7 +55,7 @@ def start_detecting_congestion():
 
         avg_speed, p10_speed, p25_speed, sample_count = stats
         
-        if sample_count<10:
+        if sample_count<3:
             continue
         
         #fifteen_minutes_ago = time - timedelta(minutes=15)
@@ -72,7 +72,7 @@ def start_detecting_congestion():
         if not result or result[0]is None:
             continue
         
-        speed_average_last_15min = float(result[0])
+        speed_average_last_15min = float(result[0])   
         
         warning_type = None
         if speed_average_last_15min < p10_speed:
@@ -80,7 +80,8 @@ def start_detecting_congestion():
         elif (speed_average_last_15min >= p10_speed and speed_average_last_15min < p25_speed):
             warning_type = 'SLOW_TRAFFIC'
 
-        if warning_type == 'VERY_SLOW_TRAFFIC':
+        # if warning_type == 'VERY_SLOW_TRAFFIC':
+        if warning_type:
             print(f"Alert! {warning_type}: {link_name}")
         
         if warning_type:

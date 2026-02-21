@@ -49,13 +49,12 @@ def start_aggregating_statistics():
             
             cursor.execute("""
             INSERT INTO traffic_stats 
-                (link_id, hour_of_day, day_period, is_weekend, avg_speed, p10_speed, p25_speed, p75_speed, sample_count, updated_at)
+                (link_id, hour_of_day, day_period, is_weekend, avg_speed, p10_speed, p25_speed,  sample_count, updated_at)
             SELECT
                 %s, %s, %s, %s,
                 avg(speed),
                 percentile_cont(0.10) WITHIN GROUP (ORDER BY speed),
                 percentile_cont(0.25) WITHIN GROUP (ORDER BY speed),
-                percentile_cont(0.75) WITHIN GROUP (ORDER BY speed),
                 count(*),
                 now()
             FROM traffic_data
@@ -65,11 +64,9 @@ def start_aggregating_statistics():
                 avg_speed = EXCLUDED.avg_speed,
                 p10_speed = EXCLUDED.p10_speed,
                 p25_speed = EXCLUDED.p25_speed,
-                p75_speed = EXCLUDED.p75_speed,
                 sample_count = EXCLUDED.sample_count,
                 updated_at = EXCLUDED.updated_at;
         """, (link_id, hour, period, is_weekend, link_id, hour, is_weekend))
-
 
             connection.commit()
 

@@ -55,12 +55,11 @@ def clean_garbage_data(raw_message):
     raw_values = raw_message[big_message_key]
     
     column_names = [
-        "ID", "SPEED", "TRAVEL_TIME",  "DATA_AS_OF", 
+        "ID", "SPEED", "TRAVEL_TIME", "STATUS", "DATA_AS_OF", 
         "LINK_ID", "LINK_POINTS", "ENCODED_POLY_LINE", 
         "ENCODED_POLY_LINE_LVLS", "OWNER", "TRANSCOM_ID", 
         "BOROUGH", "LINK_NAME"
-    ]
-    
+    ]  
     
     f = io.StringIO(raw_values)
     reader = csv.reader(f, delimiter=',')
@@ -95,5 +94,6 @@ def clean_garbage_data(raw_message):
     'SPEED':data_dictionary['SPEED'],
     'TRAVEL_TIME':data_dictionary['TRAVEL_TIME'],
     'BOROUGH': data_dictionary['BOROUGH'],
-}
+    }
+    
     return new_dictionary

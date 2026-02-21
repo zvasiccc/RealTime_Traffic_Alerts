@@ -12,9 +12,9 @@ def setup_database():
         CREATE TABLE IF NOT EXISTS traffic_data (
             time        TIMESTAMPTZ NOT NULL,
             link_id     INT NOT NULL,
+            link_name   TEXT,
             speed       FLOAT,
             travel_time INT,
-            link_name   TEXT,
             borough     TEXT,
             hour_of_day INT,
             day_period  TEXT,
@@ -37,7 +37,6 @@ def setup_database():
             avg_speed    FLOAT,
             p10_speed    FLOAT,
             p25_speed    FLOAT,
-            p75_speed    FLOAT,
             sample_count INT,
             updated_at   TIMESTAMPTZ DEFAULT now(),
             PRIMARY KEY (link_id, hour_of_day, is_weekend)
