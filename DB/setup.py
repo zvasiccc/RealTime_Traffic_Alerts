@@ -10,17 +10,17 @@ def setup_database():
     #all clear data
     cur.execute("""
         CREATE TABLE IF NOT EXISTS traffic_data (
-            time        TIMESTAMPTZ NOT NULL,
-            link_id     INT NOT NULL,
-            link_name   TEXT,
-            speed       FLOAT,
+            time TIMESTAMPTZ NOT NULL,
+            link_id INT NOT NULL,
+            link_name TEXT,
+            speed FLOAT,
             travel_time INT,
-            borough     TEXT,
+            borough TEXT,
             hour_of_day INT,
-            day_period  TEXT,
+            day_period TEXT,
             is_weekend BOOLEAN
-        );
-    """)
+            );
+        """)
     
     #table partitioning by time
     cur.execute("""
@@ -30,15 +30,15 @@ def setup_database():
     #statistics data
     cur.execute("""
         CREATE TABLE IF NOT EXISTS traffic_stats (
-            link_id      INT NOT NULL,
-            hour_of_day  INT NOT NULL,
-            day_period   TEXT NOT NULL,
-            is_weekend   BOOLEAN NOT NULL DEFAULT FALSE,
-            avg_speed    FLOAT,
-            p10_speed    FLOAT,
-            p25_speed    FLOAT,
+            link_id INT NOT NULL,
+            hour_of_day INT NOT NULL,
+            day_period TEXT NOT NULL,
+            is_weekend BOOLEAN NOT NULL DEFAULT FALSE,
+            avg_speed FLOAT,
+            p10_speed FLOAT,
+            p25_speed FLOAT,
             sample_count INT,
-            updated_at   TIMESTAMPTZ DEFAULT now(),
+            updated_at TIMESTAMPTZ DEFAULT now(),
             PRIMARY KEY (link_id, hour_of_day, is_weekend)
         );
     """)
@@ -46,15 +46,15 @@ def setup_database():
     #warnings
     cur.execute("""
         CREATE TABLE IF NOT EXISTS traffic_warnings (
-            time         TIMESTAMPTZ NOT NULL,
-            link_id      INT NOT NULL,
-            speed        FLOAT,
-            avg_speed    FLOAT,
-            p10_speed    FLOAT,
-            hour_of_day  INT,
-            day_period   TEXT,
-            warning_type TEXT,
-            source       TEXT
+            time TIMESTAMPTZ NOT NULL,
+            link_id INT NOT NULL,
+            speed FLOAT,
+            avg_speed FLOAT,
+            p10_speed FLOAT,
+            p25_speed FLOAT,
+            hour_of_day INT,
+            day_period TEXT,
+            warning_type TEXT
         );
     """)
     cur.execute("""

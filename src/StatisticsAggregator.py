@@ -1,10 +1,7 @@
 from kafka import KafkaConsumer
 import json
-
 from datetime import datetime, timezone
 from src.SideFunctions import day_period, get_connection
-
-
 
 def start_aggregating_statistics():
     consumer = KafkaConsumer(
@@ -13,7 +10,7 @@ def start_aggregating_statistics():
         group_id='aggregatorsGroup',
         auto_offset_reset='earliest',
         value_deserializer=lambda v: json.loads(v.decode('utf-8')),
-    )
+        )
 
     connection = get_connection()
     cursor = connection.cursor()
@@ -42,7 +39,7 @@ def start_aggregating_statistics():
             
             cursor.execute("""
                 INSERT INTO traffic_data
-                    (time, link_id, link_name, speed, travel_time,  borough, hour_of_day, day_period,is_weekend)
+                    (time, link_id, link_name, speed, travel_time, borough,hour_of_day, day_period,is_weekend)
                 VALUES
                     (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (time, link_id,link_name, speed, travel_time, borough, hour, period,is_weekend))

@@ -1,6 +1,6 @@
 from kafka import KafkaConsumer, KafkaProducer
 import json
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from DB.setup import get_connection
 from src.SideFunctions import day_period
 
@@ -10,12 +10,12 @@ def start_detecting_congestion():
             bootstrap_servers='localhost:29092',
             group_id='detectorsGroup',
             value_deserializer=lambda v: json.loads(v.decode('utf-8')), 
-    )
+        )
     
     producer = KafkaProducer(
         bootstrap_servers='localhost:29092',
         value_serializer=lambda v: json.dumps(v).encode('utf-8')
-    )
+        )
     
     connection = get_connection()
     cursor = connection.cursor()
@@ -55,10 +55,8 @@ def start_detecting_congestion():
 
         avg_speed, p10_speed, p25_speed, sample_count = stats
         
-        if sample_count<3:
+        if sample_count<7:
             continue
-        
-        #fifteen_minutes_ago = time - timedelta(minutes=15)
         
         cursor.execute("""
             SELECT avg(speed) 
@@ -80,7 +78,6 @@ def start_detecting_congestion():
         elif (speed_average_last_15min >= p10_speed and speed_average_last_15min < p25_speed):
             warning_type = 'SLOW_TRAFFIC'
 
-        # if warning_type == 'VERY_SLOW_TRAFFIC':
         if warning_type:
             print(f"Alert! {warning_type}: {link_name}")
         
@@ -96,17 +93,16 @@ def start_detecting_congestion():
                 'p25_speed': p25_speed,
                 'hour_of_day': hour,
                 'day_period': period,
-                'warning_type': warning_type,
-                'source': 'live'
+                'warning_type': warning_type
             }
             producer.send('traffic_alerts', warning)
             producer.flush()
             cursor.execute("""
                 INSERT INTO traffic_warnings
-                    (time, link_id, speed, avg_speed, p10_speed, hour_of_day, day_period, warning_type, source)
+                    (time, link_id, speed, avg_speed, p10_speed, p25_speed, hour_of_day, day_period, warning_type)
                 VALUES
-                    (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (time, link_id, speed, avg_speed, p10_speed, hour, period, warning_type, 'live'))
+                    (%s, %s, %s, %s, %s, %s,  %s, %s, %s)
+            """, (time, link_id, speed, avg_speed, p10_speed, p25_speed, hour, period, warning_type))
             connection.commit()
             
 

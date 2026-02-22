@@ -5,7 +5,7 @@ import multiprocessing
 import csv
 import io
 
-def data_cleaner(worker_id):
+def data_cleaner():
     consumer = KafkaConsumer(
         'raw_traffic',
         bootstrap_servers='localhost:29092',
@@ -34,7 +34,7 @@ def start_cleaning_data():
     workers =[]
     
     for i in range(5):
-        p=multiprocessing.Process(target=data_cleaner,args=(i,))
+        p=multiprocessing.Process(target=data_cleaner)
         workers.append(p)
         p.start()
         
@@ -54,12 +54,8 @@ def clean_garbage_data(raw_message):
     
     raw_values = raw_message[big_message_key]
     
-    column_names = [
-        "ID", "SPEED", "TRAVEL_TIME", "STATUS", "DATA_AS_OF", 
-        "LINK_ID", "LINK_POINTS", "ENCODED_POLY_LINE", 
-        "ENCODED_POLY_LINE_LVLS", "OWNER", "TRANSCOM_ID", 
-        "BOROUGH", "LINK_NAME"
-    ]  
+    column_names = ["ID", "SPEED", "TRAVEL_TIME", "STATUS", "DATA_AS_OF", "LINK_ID", "LINK_POINTS", "ENCODED_POLY_LINE", 
+        "ENCODED_POLY_LINE_LVLS", "OWNER", "TRANSCOM_ID", "BOROUGH", "LINK_NAME"]  
     
     f = io.StringIO(raw_values)
     reader = csv.reader(f, delimiter=',')
@@ -85,7 +81,7 @@ def clean_garbage_data(raw_message):
         return None
 
     data_dictionary['LINK_NAME'] = data_dictionary.get('LINK_NAME', '').strip()
-    data_dictionary['BOROUGH']   = data_dictionary.get('BOROUGH', '').strip()
+    data_dictionary['BOROUGH'] = data_dictionary.get('BOROUGH', '').strip()
     
     new_dictionary = {
     'DATA_AS_OF':data_dictionary['DATA_AS_OF'],

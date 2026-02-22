@@ -2,8 +2,8 @@ import pandas as pd
 from kafka import KafkaProducer
 import json
 import time
-from datetime import datetime
 from src.LoadData import load_data
+NUM_OF_ROWS = 100
 
 producer = KafkaProducer(
     bootstrap_servers='localhost:29092',
@@ -14,15 +14,13 @@ producer = KafkaProducer(
 
 def simulate_traffic():
 
-    BROJ_REDOVA_PO_GRUPI = 100
-    PAUZA_IZMEDJU_GRUPA = 0.1
 
     traffic_chunks = load_data(5000)
 
     for chunk in traffic_chunks:
 
-        for i in range(0, len(chunk), BROJ_REDOVA_PO_GRUPI):
-            batch = chunk.iloc[i : i + BROJ_REDOVA_PO_GRUPI]
+        for i in range(0, len(chunk), NUM_OF_ROWS):
+            batch = chunk.iloc[i : i + NUM_OF_ROWS]
             
             for index, row in batch.iterrows():
                 payload = row.to_dict()
@@ -30,8 +28,7 @@ def simulate_traffic():
                 producer.send(
                     'raw_traffic', 
                     key=str(payload.get('ID', 'unknown')), 
-                    value=payload
-                )
+                    value=payload)
             
             producer.flush() 
-            time.sleep(PAUZA_IZMEDJU_GRUPA)
+            time.sleep(0.1)
