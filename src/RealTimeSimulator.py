@@ -14,7 +14,6 @@ producer = KafkaProducer(
 
 def simulate_traffic():
 
-
     traffic_chunks = load_data(5000)
 
     for chunk in traffic_chunks:
@@ -27,8 +26,9 @@ def simulate_traffic():
                 
                 producer.send(
                     'raw_traffic', 
-                    key=str(payload.get('ID', 'unknown')), 
-                    value=payload)
+                    key=str(payload.get('ID', 'unknownID')), 
+                    value=payload
+                    )
             
             producer.flush() 
             time.sleep(0.1)

@@ -58,6 +58,7 @@ def start_detecting_congestion():
         if sample_count<7:
             continue
         
+        #stats last 15 min
         cursor.execute("""
             SELECT avg(speed) 
             FROM traffic_data
