@@ -1,7 +1,10 @@
 from kafka import KafkaConsumer
 import json
 from datetime import datetime, timezone
-from src.SideFunctions import day_period, get_connection
+from src.SideFunctions import day_period, format_to_wkt, get_connection
+from DB.DB_functions import load_existing_geometries
+
+
 
 def start_aggregating_statistics():
     consumer = KafkaConsumer(
@@ -15,6 +18,7 @@ def start_aggregating_statistics():
     connection = get_connection()
     cursor = connection.cursor()
 
+    processed_geometries = load_existing_geometries(cursor)
     for message in consumer:
         data = message.value
 
@@ -64,6 +68,17 @@ def start_aggregating_statistics():
                 sample_count = EXCLUDED.sample_count,
                 updated_at = EXCLUDED.updated_at;
         """, (link_id, hour, period, is_weekend, link_id, hour, is_weekend))
+            
+            if link_id not in processed_geometries:
+                wkt_linestring = format_to_wkt(data['LINK_POINTS'])
+    
+                if wkt_linestring:
+                    cursor.execute("""
+                        INSERT INTO road_geometries (link_id, link_name, borough, geom)
+                        VALUES (%s, %s, %s, ST_GeomFromText(%s, 4326))
+                        ON CONFLICT (link_id) DO NOTHING;
+                    """, (data['LINK_ID'], data['LINK_NAME'], data['BOROUGH'], wkt_linestring))
+                    processed_geometries.add(link_id)
 
             connection.commit()
 

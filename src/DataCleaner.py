@@ -90,6 +90,7 @@ def clean_garbage_data(raw_message):
     'SPEED':data_dictionary['SPEED'],
     'TRAVEL_TIME':data_dictionary['TRAVEL_TIME'],
     'BOROUGH': data_dictionary['BOROUGH'],
+    'LINK_POINTS': data_dictionary['LINK_POINTS']
     }
     
     return new_dictionary

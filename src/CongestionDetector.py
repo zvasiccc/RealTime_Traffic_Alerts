@@ -1,7 +1,7 @@
 from kafka import KafkaConsumer, KafkaProducer
 import json
 from datetime import datetime, timezone
-from DB.setup import get_connection
+from DB.DB_functions import get_connection
 from src.SideFunctions import day_period
 
 def start_detecting_congestion():

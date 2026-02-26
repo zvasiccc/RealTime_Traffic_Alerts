@@ -17,3 +17,30 @@ def get_connection():
         user="zeljko",
         password="lozinka123"
     )
+
+def format_to_wkt(link_points_raw):
+    if not link_points_raw:
+        return None
+    
+    try:
+
+        points = link_points_raw.strip().split()
+        
+        formatted_pairs = []
+        for p in points:
+            if ',' not in p:
+                continue
+            
+            coords = p.split(',')
+            if len(coords) >= 2:
+                lat = coords[0].strip()
+                lon = coords[1].strip()
+                if lat and lon:
+                    formatted_pairs.append(f"{lon} {lat}")
+        
+        if len(formatted_pairs) < 2:
+            return None
+            
+        return f"LINESTRING({', '.join(formatted_pairs)})"
+    except Exception:
+        return None

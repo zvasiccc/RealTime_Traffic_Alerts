@@ -4,7 +4,7 @@ from src.RealTimeSimulator import simulate_traffic
 from src.DataCleaner import start_cleaning_data
 from src.StatisticsAggregator import start_aggregating_statistics
 from src.CongestionDetector import start_detecting_congestion
-from DB.setup import setup_database
+from DB.DB_functions import setup_database
 
 if __name__ == '__main__':
 

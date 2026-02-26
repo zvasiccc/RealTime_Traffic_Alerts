@@ -6,7 +6,7 @@ def setup_database():
     cur = conn.cursor()
 
     cur.execute("CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;")
-
+    cur.execute("CREATE EXTENSION IF NOT EXISTS postgis CASCADE;")  
     #all clear data
     cur.execute("""
         CREATE TABLE IF NOT EXISTS traffic_data (
@@ -26,7 +26,7 @@ def setup_database():
     cur.execute("""
         SELECT create_hypertable('traffic_data', 'time', if_not_exists => TRUE);
     """)
-
+    print(1)
     #statistics data
     cur.execute("""
         CREATE TABLE IF NOT EXISTS traffic_stats (
@@ -60,7 +60,24 @@ def setup_database():
     cur.execute("""
         SELECT create_hypertable('traffic_warnings', 'time', if_not_exists => TRUE);
     """)
-
-
+    print(1)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS road_geometries(
+                link_id INT PRIMARY KEY,
+                link_name TEXT,
+                borough TEXT,
+                geom GEOMETRY(LineString, 4326)
+                )              
+                """)
+    
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS idx_road_geometries_geom 
+        ON road_geometries USING GIST (geom);
+    """)
+    print(2)
     cur.close()
     conn.close()
+
+def load_existing_geometries(cursor):
+    cursor.execute("SELECT link_id FROM road_geometries")
+    return set(row[0] for row in cursor.fetchall())

@@ -20,7 +20,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
   db:
-    image: timescale/timescaledb:latest-pg15 
+    image: timescale/timescaledb-ha:pg15 
     container_name: traffic_db
     environment:
       - POSTGRES_USER=zeljko
