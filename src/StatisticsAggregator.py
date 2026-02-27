@@ -11,7 +11,7 @@ def start_aggregating_statistics():
         'clean_traffic',
         bootstrap_servers='localhost:29092',
         group_id='aggregatorsGroup',
-        auto_offset_reset='earliest',
+        auto_offset_reset='latest',
         value_deserializer=lambda v: json.loads(v.decode('utf-8')),
         )
 

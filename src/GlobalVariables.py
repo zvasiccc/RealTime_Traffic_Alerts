@@ -1,0 +1,4 @@
+LAT_MIN = 40.4
+LAT_MAX = 41.0
+LON_MIN = -74.3
+LON_MAX = -73.6

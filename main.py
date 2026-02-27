@@ -8,12 +8,12 @@ from DB.DB_functions import setup_database
 
 if __name__ == '__main__':
 
+    setup_database()
     processes = [
-        multiprocessing.Process(target=setup_database, name="DB"),   
-        multiprocessing.Process(target=simulate_traffic, name="RealTimeSimulator"),
         multiprocessing.Process(target=start_cleaning_data, name="DataCleaner"),
         multiprocessing.Process(target=start_detecting_congestion, name="CongestionDetector"),
         multiprocessing.Process(target=start_aggregating_statistics, name="Monitor"),   
+        multiprocessing.Process(target=simulate_traffic, name="RealTimeSimulator"),
     ]
 
     for p in processes:

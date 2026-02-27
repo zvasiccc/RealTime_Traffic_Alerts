@@ -26,7 +26,7 @@ def setup_database():
     cur.execute("""
         SELECT create_hypertable('traffic_data', 'time', if_not_exists => TRUE);
     """)
-    print(1)
+
     #statistics data
     cur.execute("""
         CREATE TABLE IF NOT EXISTS traffic_stats (
@@ -60,7 +60,7 @@ def setup_database():
     cur.execute("""
         SELECT create_hypertable('traffic_warnings', 'time', if_not_exists => TRUE);
     """)
-    print(1)
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS road_geometries(
                 link_id INT PRIMARY KEY,
@@ -74,7 +74,7 @@ def setup_database():
         CREATE INDEX IF NOT EXISTS idx_road_geometries_geom 
         ON road_geometries USING GIST (geom);
     """)
-    print(2)
+
     cur.close()
     conn.close()
 

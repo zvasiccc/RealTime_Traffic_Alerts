@@ -9,7 +9,7 @@ def data_cleaner():
     consumer = KafkaConsumer(
         'raw_traffic',
         bootstrap_servers='localhost:29092',
-        auto_offset_reset='earliest',
+        auto_offset_reset='latest',
         group_id='dataCleaners',
         value_deserializer=lambda v: json.loads(v.decode('utf-8')),     
     )
@@ -83,6 +83,8 @@ def clean_garbage_data(raw_message):
     data_dictionary['LINK_NAME'] = data_dictionary.get('LINK_NAME', '').strip()
     data_dictionary['BOROUGH'] = data_dictionary.get('BOROUGH', '').strip()
     
+    if not data_dictionary['LINK_POINTS']:
+        return None
     new_dictionary = {
     'DATA_AS_OF':data_dictionary['DATA_AS_OF'],
     'LINK_ID':data_dictionary['LINK_ID'],

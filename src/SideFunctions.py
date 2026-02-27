@@ -1,5 +1,7 @@
 import psycopg2
 
+from src.GlobalVariables import LAT_MIN, LAT_MAX, LON_MIN, LON_MAX
+
 def day_period(hour: int) -> str:
     if 7 <= hour <= 9:
         return 'morning_peak'
@@ -19,28 +21,33 @@ def get_connection():
     )
 
 def format_to_wkt(link_points_raw):
-    if not link_points_raw:
-        return None
-    
-    try:
 
-        points = link_points_raw.strip().split()
+    points = link_points_raw.strip().split()
         
-        formatted_pairs = []
-        for p in points:
-            if ',' not in p:
+    formatted_pairs = []
+    for pair in points:
+        if ',' not in pair:
+            continue
+        
+        coords = pair.split(',')
+        if len(coords) >= 2:
+            try:
+                lat = coords[0]
+                lon = coords[1]
+                if not lat or not lon:
+                    continue
+
+                if not (LAT_MIN < float(lat) < LAT_MAX): 
+                    continue
+                if not (LON_MIN < float(lon) < LON_MAX):
+                    continue
+                
+
+                formatted_pairs.append(f"{lon} {lat}")
+            except ValueError:
                 continue
-            
-            coords = p.split(',')
-            if len(coords) >= 2:
-                lat = coords[0].strip()
-                lon = coords[1].strip()
-                if lat and lon:
-                    formatted_pairs.append(f"{lon} {lat}")
-        
-        if len(formatted_pairs) < 2:
-            return None
-            
-        return f"LINESTRING({', '.join(formatted_pairs)})"
-    except Exception:
+    
+    if len(formatted_pairs) < 2:
         return None
+            
+    return f"LINESTRING({', '.join(formatted_pairs)})"

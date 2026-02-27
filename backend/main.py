@@ -1,13 +1,21 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 import psycopg2
 import psycopg2.extras
 from DB.DB_functions import get_connection
 import json
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/api/traffic")
 async def get_traffic():
+    curr_time = "2017-09-15 23:49:02+00"
     connection = get_connection()
     cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("""
@@ -24,10 +32,12 @@ async def get_traffic():
             SELECT DISTINCT ON (link_id)
                 link_id, warning_type, speed, avg_speed
             FROM traffic_warnings
-            WHERE time >= (SELECT max(time) FROM traffic_warnings) - INTERVAL '15 minutes'
+            WHERE time >= %s::timestamptz - INTERVAL '15 minutes'
+                   AND time<= %s::timestamptz
             ORDER BY link_id, time DESC
         ) w ON r.link_id = w.link_id
-    """)
+    """,(curr_time,curr_time))
+
 
     rows=cursor.fetchall()
     cursor.close()
