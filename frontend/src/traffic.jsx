@@ -60,11 +60,30 @@ const Traffic = () => {
                     'line-width': [
                         'match',
                         ['get', 'warning_type'],
-                        'VERY_SLOW_TRAFFIC', 6,
+                        'VERY_SLOW_TRAFFIC', 5,
                         'SLOW_TRAFFIC', 4,
-                        2 // default 
+                        'NORMAL_TRAFFIC', 2,
+                        10
                     ],
                 }
+            })
+
+            const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false })
+            map.current.on('mouseenter', 'traffic-lines', (e) => {
+                map.current.getCanvas().style.cursor = 'pointer'
+                const { current_speed, warning_type } = e.features[0].properties
+                popup
+                    .setLngLat(e.lngLat)
+                    .setHTML(`<div style="font-family:monospace;font-size:12px">
+                        <b> ${warning_type}</b> 
+                        ${warning_type !== 'NORMAL_TRAFFIC' ? `<br/>${current_speed} km/h` : ''}
+                    </div>`)
+                    .addTo(map.current)
+            })
+
+            map.current.on('mouseleave', 'traffic-lines', () => {
+                map.current.getCanvas().style.cursor = ''
+                popup.remove()
             })
         })
     }, [])

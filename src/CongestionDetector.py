@@ -79,8 +79,6 @@ def start_detecting_congestion():
         elif (speed_average_last_15min >= p10_speed and speed_average_last_15min < p25_speed):
             warning_type = 'SLOW_TRAFFIC'
 
-        if warning_type:
-            print(f"Alert! {warning_type}: {link_name}")
         
         if warning_type:
             warning = {

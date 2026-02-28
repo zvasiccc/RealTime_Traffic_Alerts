@@ -15,7 +15,7 @@ app.add_middleware(
 
 @app.get("/api/traffic")
 async def get_traffic():
-    curr_time = "2017-09-15 23:49:02+00"
+    curr_time = "2017-09-15 02:49:02+00"
     connection = get_connection()
     cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("""
