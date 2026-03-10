@@ -42,7 +42,7 @@ def format_to_wkt(link_points_raw):
                 if not (LON_MIN < float(lon) < LON_MAX):
                     continue
                 
-
+                
                 formatted_pairs.append(f"{lon} {lat}")
             except ValueError:
                 continue

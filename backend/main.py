@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 import psycopg2
 import psycopg2.extras
@@ -14,8 +14,8 @@ app.add_middleware(
 )
 
 @app.get("/api/traffic")
-async def get_traffic():
-    curr_time = "2017-09-15 02:49:02+00"
+async def get_traffic(time: str = Query(default="2017-09-15 07:49:02+00")):
+    # curr_time = "2017-09-15 07:49:02+00"
     connection = get_connection()
     cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cursor.execute("""
@@ -36,7 +36,7 @@ async def get_traffic():
                    AND time<= %s::timestamptz
             ORDER BY link_id, time DESC
         ) w ON r.link_id = w.link_id
-    """,(curr_time,curr_time))
+    """,(time,time))
 
 
     rows=cursor.fetchall()
@@ -48,7 +48,7 @@ async def get_traffic():
         if not row['geojson']:
             continue
         
-        color = '#00ff00'
+        color = "#058805"
         if row['warning_type']=='VERY_SLOW_TRAFFIC':
             color = '#ff0000'
         if row['warning_type']=='SLOW_TRAFFIC':
