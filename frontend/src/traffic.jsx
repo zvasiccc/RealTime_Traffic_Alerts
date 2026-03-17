@@ -2,24 +2,28 @@ import { useEffect, useState, useRef } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 
-const START_TIME = new Date("2017-09-09T06:00:00Z")
-const STEP_MINUTES = 3
+const START_TIME = new Date("2017-09-10T02:00:00Z")
+const STEP_MINUTES = 5
 
 function formatTime(date) {
     const pad = (n) => String(n).padStart(2, '0')
     return `${date.getUTCFullYear()}-${pad(date.getUTCMonth()+1)}-${pad(date.getUTCDate())} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())}+00`
 }
 
-function useTraffic(time) {
+function useTraffic(time, playing) {
     const [data, setData] = useState(null)
+     const initialFetched = useRef(false)
 
     useEffect(() => {
-        if (!time) return
+        if (!time ) return
+        if (!playing && initialFetched.current) return 
+
+        initialFetched.current = true
         const url = `http://127.0.0.1:8000/api/traffic?time=${encodeURIComponent(formatTime(time))}`
         fetch(url)
             .then(res => res.json())
             .then(setData)
-    }, [time])
+    }, [time,playing])
 
     return { data }
 }
@@ -29,24 +33,19 @@ const Traffic = () => {
     const map = useRef(null)
     const mapLoaded = useRef(false)
     const [currentTime, setCurrentTime] = useState(START_TIME)
-    const { data } = useTraffic(currentTime)
-
-    const [ready, setReady] = useState(false)
+    const [playing, setPlaying] = useState(false) 
+    const { data } = useTraffic(currentTime, playing)
 
     useEffect(() => {
-        const timeout = setTimeout(() => setReady(true), 4000) 
-        return () => clearTimeout(timeout)
-    }, [])
-    useEffect(() => {
-        if (!ready) return
+        if (!playing) return
         const interval = setInterval(() => {
             setCurrentTime(prev => {
                 const next = new Date(prev.getTime() + STEP_MINUTES * 60 * 1000)
                 return next
             })
-        }, 300)
+        }, 700)
         return () => clearInterval(interval)
-    }, [ready])
+    }, [playing])
 
     useEffect(() => {
         if (map.current) return
@@ -75,13 +74,7 @@ const Traffic = () => {
                 layout: { 'line-join': 'round', 'line-cap': 'round' },
                 paint: {
                     'line-color': ['get', 'line_color'],
-                    'line-width': [
-                        'match', ['get', 'warning_type'],
-                        'VERY_SLOW_TRAFFIC', 3,
-                        'SLOW_TRAFFIC', 3,
-                        'NORMAL_TRAFFIC', 2,
-                        1
-                    ],
+                    'line-width': 2
                 }
             })
 
@@ -117,8 +110,18 @@ const Traffic = () => {
                 background: 'rgba(0,0,0,0.7)', color: 'white',
                 padding: '6px 12px', borderRadius: 8, fontFamily: 'monospace', fontSize: 13
             }}>
-                time: {formatTime(currentTime).slice(11, 16)}
+                time: {formatTime(currentTime).slice(0, 16)}
             </div>
+            <button
+    onClick={() => setPlaying(p => !p)}
+    style={{
+        position: 'absolute', bottom: 30, left: '50%', transform: 'translateX(-50%)',
+        zIndex: 10, background: 'rgba(0,0,0,0.75)', color: 'white',
+        border: '1px solid white', padding: '8px 20px', borderRadius: 8,
+        cursor: 'pointer', fontFamily: 'monospace', fontSize: 14
+    }}>
+    {playing ? 'Stop' : 'Start'}
+    </button>
             <div ref={mapContainer} style={{ flex: 1 }} />
         </div>
     )
